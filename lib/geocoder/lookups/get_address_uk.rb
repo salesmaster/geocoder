@@ -49,12 +49,5 @@ module Geocoder::Lookup
             Geocoder.log(:warn, response['Message'])
       end
     end
-<<<<<<< HEAD
-=======
-
-    def query_url_params(query)
-      query.sanitized_text.merge(super)
-    end
->>>>>>> 98dd0ac (Add Support For GetAddress UK Postcode Geocoding And Lookups)
   end
 end
