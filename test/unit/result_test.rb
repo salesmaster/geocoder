@@ -3,83 +3,34 @@ require 'test_helper'
 
 class ResultTest < GeocoderTestCase
 
-  def test_result_has_required_attributes
+  def test_forward_geocoding_result_has_required_attributes
     Geocoder::Lookup.all_services_except_test.each do |l|
-      next if [:get_address_uk].include? l # Doesn't search by coordinates
+      next if [
+        :get_address_uk, # Doesn't search by coordinates
+        :ip2location, # has pay-per-attribute pricing model
+        :twogis, # cant find 'Madison Square Garden'
+      ].include?(l)
+
       Geocoder.configure(:lookup => l)
       set_api_key!(l)
-      result = Geocoder.search([45.423733, -75.676333]).first
+      result = Geocoder.search("Madison Square Garden").first
       assert_result_has_required_attributes(result)
     end
   end
 
-  def test_result_has_coords_in_reasonable_range_for_madison_square_garden
-    Geocoder::Lookup.street_services.each do |l|
-      next unless File.exist?(File.join("test", "fixtures", "#{l.to_s}_madison_square_garden"))
+  def test_reverse_geocoding_result_has_required_attributes
+    Geocoder::Lookup.all_services_except_test.each do |l|
+      next if [
+        :ip2location, # has pay-per-attribute pricing model
+        :nationaal_georegister_nl, # no reverse geocoding
+        :melissa_street, # reverse geocoding not implemented
+        :twogis, # cant find 'Madison Square Garden'
+      ].include?(l)
+
       Geocoder.configure(:lookup => l)
       set_api_key!(l)
-      result = Geocoder.search("Madison Square Garden, New York, NY  10001, United States").first
-      assert (result.latitude > 40 and result.latitude < 41), "Lookup #{l} latitude out of range"
-      assert (result.longitude > -74 and result.longitude < -73), "Lookup #{l} longitude out of range"
-    end
-  end
-
-  def test_result_accepts_reverse_coords_in_reasonable_range_for_madison_square_garden
-    Geocoder::Lookup.street_services.each do |l|
-      next unless File.exist?(File.join("test", "fixtures", "#{l.to_s}_madison_square_garden"))
-      next if [:bing, :esri, :geocoder_ca, :geocoder_us, :geoportail_lu].include? l # Reverse fixture does not match forward
-      Geocoder.configure(:lookup => l)
-      set_api_key!(l)
-      result = Geocoder.search([40.750354, -73.993371]).first
-      assert (["New York", "New York City"].include? result.city), "Reverse lookup #{l} City does not match"
-      assert (result.latitude > 40 and result.latitude < 41), "Reverse lookup #{l} latitude out of range"
-      assert (result.longitude > -74 and result.longitude < -73), "Reverse lookup #{l} longitude out of range"
-    end
-  end
-
-  def test_yandex_result_without_city_does_not_raise_exception
-    assert_nothing_raised do
-      Geocoder.configure(:lookup => :yandex)
-      set_api_key!(:yandex)
-      result = Geocoder.search("no city and town").first
-      assert_equal "", result.city
-    end
-  end
-
-  def test_yandex_result_without_admin_area_no_exception
-    assert_nothing_raised do
-      Geocoder.configure(:lookup => :yandex)
-      set_api_key!(:yandex)
-      result = Geocoder.search("no administrative area").first
-      assert_equal "", result.city
-    end
-  end
-
-  def test_yandex_result_new_york
-    assert_nothing_raised do
-      Geocoder.configure(:lookup => :yandex)
-      set_api_key!(:yandex)
-      result = Geocoder.search("new york").first
-      assert_equal "", result.city
-    end
-  end
-
-  def test_yandex_result_kind
-    assert_nothing_raised do
-      Geocoder.configure(:lookup => :yandex)
-      set_api_key!(:yandex)
-      ["new york", [45.423733, -75.676333], "no city and town"].each do |query|
-        Geocoder.search("new york").first.kind
-      end
-    end
-  end
-
-  def test_yandex_result_without_locality_name
-    assert_nothing_raised do
-      Geocoder.configure(:lookup => :yandex)
-      set_api_key!(:yandex)
-      result = Geocoder.search("canada rue dupuis 14")[6]
-      assert_equal "", result.city
+      result = Geocoder.search([45.423733, -75.676333]).first
+      assert_result_has_required_attributes(result)
     end
   end
 

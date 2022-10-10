@@ -4,43 +4,59 @@ module Geocoder::Result
   class Mapbox < Base
 
     def coordinates
-      @data["geometry"]["coordinates"].reverse.map(&:to_f)
+      data['geometry']['coordinates'].reverse.map(&:to_f)
     end
 
     def place_name
-      @data['text']
+      data['text']
     end
 
     def street
-      @data['properties']['address']
+      data['properties']['address']
     end
 
     def city
-      @data['context'].map { |c| c['text'] if c['id'] =~ /place/ }.compact.first
+      context_part('place')
     end
 
     def state
-      @data['context'].map { |c| c['text'] if c['id'] =~ /region/ }.compact.first
+      context_part('region')
     end
 
-    alias_method :state_code, :state
+    def state_code
+      value = context_part('region', 'short_code')
+      value.split('-').last unless value.nil?
+    end
 
     def postal_code
-      @data['context'].map { |c| c['text'] if c['id'] =~ /postcode/ }.compact.first
+      context_part('postcode')
     end
 
     def country
-      @data['context'].map { |c| c['text'] if c['id'] =~ /country/ }.compact.first
+      context_part('country')
     end
 
-    alias_method :country_code, :country
+    def country_code
+      value = context_part('country', 'short_code')
+      value.upcase unless value.nil?
+    end
 
     def neighborhood
-      @data['context'].map { |c| c['text'] if c['id'] =~ /neighborhood/ }.compact.first
+      context_part('neighborhood')
     end
 
     def address
-      [place_name, street, city, state, postal_code, country].compact.join(", ")
+      [place_name, street, city, state, postal_code, country].compact.join(', ')
+    end
+
+    private
+
+    def context_part(name, key = 'text')
+      (context.detect { |c| c['id'] =~ Regexp.new(name) } || {})[key]
+    end
+
+    def context
+      Array(data['context'])
     end
   end
 end

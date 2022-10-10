@@ -2,14 +2,11 @@ source "https://rubygems.org"
 
 group :development, :test do
   gem 'rake'
-  gem 'mongoid', '2.6.0'
-  gem 'bson_ext', platforms: :ruby
+  gem 'mongoid'
   gem 'geoip'
   gem 'rubyzip'
-  gem 'rails'
+  gem 'rails', '~>5.1.0'
   gem 'test-unit' # needed for Ruby >=2.2.0
-
-  gem 'byebug', platforms: :mri
 
   platforms :jruby do
     gem 'jruby-openssl'
@@ -23,12 +20,16 @@ group :development, :test do
 end
 
 group :test do
-  gem 'sqlite3', :platform => [:ruby, :mswin, :mingw]
+  platforms :ruby, :mswin, :mingw do
+    gem 'sqlite3', '~> 1.4.2'
+    gem 'sqlite_ext', '~> 1.5.0'
+  end
+
   gem 'webmock'
 
   platforms :ruby do
-    gem 'pg'
-    gem 'mysql2', '~> 0.3.11'
+    gem 'pg', '~> 0.11'
+    gem 'mysql2', '~> 0.5.4'
   end
 
   platforms :jruby do
